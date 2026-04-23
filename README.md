@@ -3,6 +3,10 @@
 AI agents autonomously **discover**, **pay for**, and **rate** other agents' skills via Circle Nanopayments (x402 protocol) on Arc Testnet.
 
 **Hackathon**: Agentic Economy on Arc (lablab.ai, April 2026)
+**Submission Track**: Agent-to-Agent Payment Loop
+**Circle products used**: Nanopayments (x402), Circle Gateway (batched settlement), Arc Testnet (USDC-native L1), Arc Faucet
+
+> **Why this track fits**: AgentForge is a multi-agent system in which an Orchestrator Agent autonomously decides which Skill Agents to call, pays each one via x402 without human approval, and rates them on-chain after the call completes. Every payment is initiated by an agent, not a user click — which is the defining characteristic of the Agent-to-Agent Payment Loop track. A single user task triggers ~10 on-chain payments across the 7-step pipeline, naturally exceeding the 50+ transaction requirement.
 
 ## What It Does
 
@@ -105,6 +109,8 @@ Additionally, Circle Gateway batches off-chain payment authorizations into singl
 
 ## License
 
-Apache 2.0 — see [LICENSE](./LICENSE).
+**MIT** — see [LICENSE](./LICENSE).
 
-This project is built on top of [`circlefin/arc-nanopayments`](https://github.com/circlefin/arc-nanopayments) (Apache 2.0). The starter provides the Next.js scaffolding, x402 middleware (`lib/x402.ts`), Supabase integration, and shadcn UI components. Original work in this repo: the `contracts/` Solidity layer, `app/api/skills/` and `app/api/orchestrator/` endpoints, the orchestrator pipeline (`lib/orchestrator.ts`, `orchestrator.mts`, `demo-runner.mts`), and the dashboard components under `components/dashboard/` (`activity-feed`, `agent-network`, `orchestrator-panel`, `stats-cards`).
+This project incorporates code from [`circlefin/arc-nanopayments`](https://github.com/circlefin/arc-nanopayments), which is licensed under Apache 2.0. The starter provides the Next.js scaffolding, x402 middleware (`lib/x402.ts`), Supabase integration, and shadcn UI components — those files retain their original Apache 2.0 license per the [NOTICE](./NOTICE) file.
+
+Original work in this repo (MIT-licensed): the `contracts/` Solidity layer (SkillRegistry, PaymentGuard, MarketplaceFee), `app/api/skills/` and `app/api/orchestrator/` endpoints, the orchestrator pipeline (`lib/orchestrator.ts`, `lib/llm.ts`, `lib/contracts.ts`, `orchestrator.mts`, `demo-runner.mts`), and the dashboard components under `components/dashboard/` (`activity-feed`, `agent-network`, `orchestrator-panel`, `stats-cards`), plus `components/login-card.tsx` and `components/skill-catalog.tsx`.

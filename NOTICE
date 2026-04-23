@@ -1,0 +1,50 @@
+AgentForge
+Copyright (c) 2026 0xE
+
+This project is licensed under the MIT License (see LICENSE).
+
+------------------------------------------------------------------------------
+Third-party attribution
+------------------------------------------------------------------------------
+
+This project incorporates portions of code from:
+
+  circlefin/arc-nanopayments
+  https://github.com/circlefin/arc-nanopayments
+  Licensed under the Apache License, Version 2.0
+  Copyright (c) Circle Internet Financial, LLC
+
+The starter provides the following components, which retain their original
+Apache 2.0 license:
+
+  - lib/x402.ts                                  (x402 middleware wrapper)
+  - lib/supabase/{client,proxy,server}.ts        (Supabase integration)
+  - lib/utils.ts                                 (shadcn cn() helper)
+  - components/ui/*                              (shadcn UI primitives)
+  - components/dashboard/{gateway-balance-dialog,
+                          top-bar-gateway-controls,
+                          withdraw-dialog}.tsx   (Gateway UI)
+  - hooks/use-transactions.ts                    (transaction subscription)
+  - hooks/use-withdrawals.ts                     (withdrawal subscription)
+  - app/api/gateway/{balance,withdraw}/route.ts  (Gateway API routes)
+  - app/actions.ts                               (auth server actions)
+  - app/dashboard/layout.tsx                     (dashboard shell)
+  - app/layout.tsx, app/globals.css              (root layout + global styles)
+  - proxy.ts, next.config.ts, eslint.config.mjs,
+    postcss.config.mjs, components.json          (Next.js + tooling config)
+  - supabase/                                    (Supabase migrations + config)
+  - generate-wallets.mts                         (wallet generation utility)
+  - .env.example                                 (env scaffold; extended for
+                                                  this project)
+
+A copy of the Apache 2.0 license is available at:
+  https://www.apache.org/licenses/LICENSE-2.0
+
+The remainder of the work in this repository — including the on-chain
+contracts (contracts/), the skill endpoints (app/api/skills/), the
+orchestrator pipeline (app/api/orchestrator/, lib/orchestrator.ts,
+lib/llm.ts, lib/contracts.ts, orchestrator.mts, demo-runner.mts), the
+modified agent.mts, and the dashboard components under
+components/dashboard/ (activity-feed, agent-network, orchestrator-panel,
+stats-cards), as well as components/login-card.tsx and
+components/skill-catalog.tsx — is original work and licensed under MIT.
