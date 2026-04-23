@@ -38,9 +38,18 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          # Prevent Next from hard-failing on missing runtime secrets during a build-only CI pass.
+          # Build needs eagerly-initialized clients (Supabase, etc.) to instantiate
+          # without crashing, even though we don't have real runtime secrets in CI.
+          # These placeholders make the modules load; they are NOT used at request time.
           NEXT_TELEMETRY_DISABLED: '1'
           SKIP_ENV_VALIDATION: '1'
+          NEXT_PUBLIC_SUPABASE_URL: 'https://placeholder.supabase.co'
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'placeholder'
+          SUPABASE_SERVICE_ROLE_KEY: 'placeholder'
+          SELLER_ADDRESS: '0x0000000000000000000000000000000000000000'
+          NEXT_PUBLIC_SKILL_REGISTRY_ADDRESS: '0x0000000000000000000000000000000000000000'
+          NEXT_PUBLIC_PAYMENT_GUARD_ADDRESS: '0x0000000000000000000000000000000000000000'
+          NEXT_PUBLIC_MARKETPLACE_FEE_ADDRESS: '0x0000000000000000000000000000000000000000'
 
   contracts:
     name: Foundry build + test

@@ -29,18 +29,10 @@ export const sellerAddress = process.env.SELLER_ADDRESS as `0x${string}`;
 
 const facilitator = new BatchFacilitatorClient();
 
-// Lazy Supabase client — created on first use so build-time page-data collection
-// (which evaluates this module without runtime env vars in CI) does not crash.
-let _supabase: ReturnType<typeof createClient> | null = null;
-function getSupabase() {
-  if (!_supabase) {
-    _supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    );
-  }
-  return _supabase;
-}
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+);
 
 interface PaymentPayload {
   x402Version: number;
@@ -155,7 +147,7 @@ export function withGateway(
       ).toString();
       const payer = settleResult.payer ?? verifyResult.payer ?? "unknown";
 
-      const { error } = await getSupabase().from("payment_events").insert({
+      const { error } = await supabase.from("payment_events").insert({
         endpoint,
         payer,
         amount_usdc: amountUsdc,
