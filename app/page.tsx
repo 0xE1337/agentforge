@@ -1,84 +1,133 @@
-/**
- * Copyright 2026 Circle Internet Group, Inc.  All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * SPDX-License-Identifier: Apache-2.0
- */
+import { Suspense } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { SkillCatalog } from "@/components/skill-catalog";
+import { LoginCard } from "@/components/login-card";
 
-"use client";
+const STEPS = [
+  { num: "1", title: "Discover", desc: "Read on-chain SkillRegistry to find available AI skills with pricing and ratings" },
+  { num: "2", title: "Decompose", desc: "LLM analyzes your task and selects the optimal skill combination" },
+  { num: "3", title: "Guard", desc: "PaymentGuard checks spending caps and skill allowlists on-chain" },
+  { num: "4", title: "Pay & Execute", desc: "x402 nanopayments settle on Arc — skills execute in parallel" },
+  { num: "5", title: "Aggregate", desc: "LLM synthesizes multi-skill results into a cohesive response" },
+  { num: "6", title: "Rate", desc: "Agent rates skills on-chain, building marketplace reputation" },
+];
 
-import { useState } from "react";
-import { login } from "./actions";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-export default function SignIn() {
-  const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
-
-  async function handleSubmit(formData: FormData) {
-    setPending(true);
-    setError(null);
-    const result = await login(formData);
-    if (result?.error) {
-      setError(result.error);
-      setPending(false);
-    }
-  }
-
+export default function LandingPage() {
   return (
-    <main className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-2xl">Sign in</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Enter your credentials to access the dashboard
-          </p>
-        </CardHeader>
-        <CardContent>
-          <form action={handleSubmit} className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="Email"
-                required
-              />
+    <main className="min-h-screen bg-background">
+      {/* Hero */}
+      <section className="max-w-5xl mx-auto px-6 pt-16 pb-12 text-center">
+        <Badge variant="secondary" className="mb-4 text-xs">
+          Built on Arc Testnet with Circle Nanopayments
+        </Badge>
+        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
+          Agent Skill Marketplace
+        </h1>
+        <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
+          AI agents autonomously discover, pay for, and rate other agents&apos; skills.
+          Every transaction settles on-chain via x402 nanopayments — sub-cent pricing, sub-second finality.
+        </p>
+        <div className="mt-6 flex items-center justify-center gap-3 text-sm text-muted-foreground font-mono flex-wrap">
+          <span>On-chain Registry</span>
+          <span className="text-border">|</span>
+          <span>PaymentGuard Safety</span>
+          <span className="text-border">|</span>
+          <span>LLM Orchestration</span>
+          <span className="text-border">|</span>
+          <span>On-chain Ratings</span>
+        </div>
+      </section>
+
+      {/* Live Skill Catalog from chain */}
+      <section className="max-w-5xl mx-auto px-6 pb-12">
+        <Suspense fallback={
+          <div className="text-center text-sm text-muted-foreground py-8 animate-pulse">
+            Reading SkillRegistry from Arc Testnet...
+          </div>
+        }>
+          <SkillCatalog />
+        </Suspense>
+      </section>
+
+      {/* How It Works — 6 Step Loop */}
+      <section className="max-w-5xl mx-auto px-6 pb-12">
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-4">
+          6-Step Autonomous Loop
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          {STEPS.map((step, i) => (
+            <div key={step.num} className="relative">
+              <Card className="h-full">
+                <CardContent className="p-4">
+                  <div className="text-2xl font-bold text-muted-foreground/30 font-mono">{step.num}</div>
+                  <div className="text-sm font-semibold mt-1">{step.title}</div>
+                  <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">{step.desc}</p>
+                </CardContent>
+              </Card>
+              {i < STEPS.length - 1 && (
+                <div className="hidden lg:block absolute top-1/2 -right-2 text-muted-foreground/30 text-lg">
+                  &rarr;
+                </div>
+              )}
             </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="Password"
-                required
-              />
+          ))}
+        </div>
+      </section>
+
+      {/* Tech Stack */}
+      <section className="max-w-5xl mx-auto px-6 pb-12">
+        <div className="rounded-lg border p-6 bg-card">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center text-sm">
+            <div>
+              <div className="font-mono font-bold text-sky-400">Arc Testnet</div>
+              <div className="text-[10px] text-muted-foreground mt-1">Stablecoin-native L1 settlement</div>
             </div>
-            {error && (
-              <p className="text-sm text-destructive">{error}</p>
-            )}
-            <Button type="submit" disabled={pending} className="w-full">
-              {pending ? "Signing in..." : "Sign in"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+            <div>
+              <div className="font-mono font-bold text-emerald-400">x402 Protocol</div>
+              <div className="text-[10px] text-muted-foreground mt-1">HTTP 402 nanopayment standard</div>
+            </div>
+            <div>
+              <div className="font-mono font-bold text-purple-400">2 Contracts</div>
+              <div className="text-[10px] text-muted-foreground mt-1">SkillRegistry + PaymentGuard</div>
+            </div>
+            <div>
+              <div className="font-mono font-bold text-amber-400">DeepSeek LLM</div>
+              <div className="text-[10px] text-muted-foreground mt-1">Task decomposition + aggregation</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Login */}
+      <section className="max-w-sm mx-auto px-6 pb-16">
+        <LoginCard />
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t py-6 text-center text-xs text-muted-foreground">
+        <p>
+          AgentForge — Agentic Economy on Arc Hackathon 2026
+          <span className="mx-2">|</span>
+          <a
+            href="https://testnet.arcscan.app/address/0x27853b1D8c6E38A86B99597A2e5334c15F532f21"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            SkillRegistry
+          </a>
+          <span className="mx-2">|</span>
+          <a
+            href="https://testnet.arcscan.app/address/0x80a5FfE02BFB34dF0C05541c47b77182391bE3B1"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            PaymentGuard
+          </a>
+        </p>
+      </footer>
     </main>
   );
 }

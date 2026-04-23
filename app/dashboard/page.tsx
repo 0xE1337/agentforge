@@ -1,21 +1,3 @@
-/**
- * Copyright 2026 Circle Internet Group, Inc.  All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
@@ -54,6 +36,10 @@ import {
 import { shortenHash } from "@/lib/utils";
 import { usePaymentEvents } from "@/hooks/use-transactions";
 import { useWithdrawals } from "@/hooks/use-withdrawals";
+import { StatsCards } from "@/components/dashboard/stats-cards";
+import { AgentNetwork } from "@/components/dashboard/agent-network";
+import { ActivityFeed } from "@/components/dashboard/activity-feed";
+import { OrchestratorPanel } from "@/components/dashboard/orchestrator-panel";
 
 type SortDirection = "default" | "asc" | "desc";
 type SortField = "amount" | "date";
@@ -162,10 +148,8 @@ export default function Dashboard() {
     setPage(1);
   }
 
-  // ── Payments filtering & sorting ──
   const filteredPayments = useMemo(() => {
     let result = events;
-
     if (filter) {
       const query = filter.toLowerCase();
       result = result.filter(
@@ -175,7 +159,6 @@ export default function Dashboard() {
           ev.endpoint.toLowerCase().includes(query),
       );
     }
-
     if (sortField && sortDirection !== "default") {
       result = [...result].sort((a, b) => {
         let cmp: number;
@@ -187,14 +170,11 @@ export default function Dashboard() {
         return sortDirection === "desc" ? -cmp : cmp;
       });
     }
-
     return result;
   }, [events, filter, sortField, sortDirection]);
 
-  // ── Withdrawals filtering & sorting ──
   const filteredWithdrawals = useMemo(() => {
     let result = withdrawals;
-
     if (filter) {
       const query = filter.toLowerCase();
       result = result.filter(
@@ -205,7 +185,6 @@ export default function Dashboard() {
           w.status.toLowerCase().includes(query),
       );
     }
-
     if (sortField && sortDirection !== "default") {
       result = [...result].sort((a, b) => {
         let cmp: number;
@@ -217,15 +196,12 @@ export default function Dashboard() {
         return sortDirection === "desc" ? -cmp : cmp;
       });
     }
-
     return result;
   }, [withdrawals, filter, sortField, sortDirection]);
 
   const activeData = activeTab === "payments" ? filteredPayments : filteredWithdrawals;
   const loading = activeTab === "payments" ? loadingPayments : loadingWithdrawals;
   const totalPages = Math.max(1, Math.ceil(activeData.length / pageSize));
-
-  // Clamp page if data shrinks (e.g. realtime delete)
   const clampedPage = Math.min(page, totalPages);
 
   const paginatedPayments = useMemo(() => {
@@ -239,280 +215,279 @@ export default function Dashboard() {
   }, [filteredWithdrawals, clampedPage, pageSize]);
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Welcome back!</h1>
+    <div className="max-w-7xl mx-auto space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold">Agent Skill Marketplace</h1>
         <p className="text-muted-foreground text-sm">
-          Monitor incoming nanopayments and manage withdrawals.
+          AI agents autonomously discover, pay for, and rate skills via Circle Nanopayments on Arc
         </p>
       </div>
 
-      <div className="flex items-center gap-3 mb-4">
-        <Input
-          placeholder={
-            activeTab === "payments"
-              ? "Filter by tx hash, payer, or endpoint..."
-              : "Filter by tx hash, address, chain, or status..."
-          }
-          className="max-w-xs"
-          value={filter}
-          onChange={(e) => { setFilter(e.target.value); setPage(1); }}
-        />
-        <div className="flex items-center gap-2 ml-auto">
-          <span className="text-sm text-muted-foreground whitespace-nowrap">Rows per page</span>
-          <Select
-            value={String(pageSize)}
-            onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}
-          >
-            <SelectTrigger size="sm" className="w-[70px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {PAGE_SIZE_OPTIONS.map((size) => (
-                <SelectItem key={size} value={String(size)}>
-                  {size}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      {/* Stats Cards */}
+      <StatsCards events={events} />
+
+      {/* Live Orchestrator */}
+      <OrchestratorPanel />
+
+      {/* Network + Activity Feed */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <AgentNetwork events={events} />
+        <ActivityFeed events={events} />
       </div>
 
-      <Tabs
-        value={activeTab}
-        onValueChange={(v) => {
-          setActiveTab(v);
-          setFilter("");
-          setPage(1);
-          setSortField(null);
-          setSortDirection("default");
-        }}
-      >
-        <TabsList className="w-full">
-          <TabsTrigger value="payments">Payments</TabsTrigger>
-          <TabsTrigger value="withdrawals">Withdrawals</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="payments">
-          <div className="rounded-lg border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Transaction</TableHead>
-                  <TableHead>Payer</TableHead>
-                  <TableHead>Endpoint</TableHead>
-                  <TableHead className="text-right">
-                    <button
-                      className="inline-flex items-center gap-1 hover:text-foreground transition-colors ml-auto"
-                      onClick={() => handleSort("amount")}
-                    >
-                      Amount (USDC)
-                      <SortIcon
-                        direction={sortField === "amount" ? sortDirection : "default"}
-                      />
-                    </button>
-                  </TableHead>
-                  <TableHead>
-                    <button
-                      className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
-                      onClick={() => handleSort("date")}
-                    >
-                      Date
-                      <SortIcon direction={sortField === "date" ? sortDirection : "default"} />
-                    </button>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loadingPayments ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      className="h-24 text-center text-muted-foreground"
-                    >
-                      <Loader2 size={16} className="animate-spin inline mr-2" />
-                      Loading payments...
-                    </TableCell>
-                  </TableRow>
-                ) : paginatedPayments.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      className="h-24 text-center text-muted-foreground"
-                    >
-                      No payments found.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  paginatedPayments.map((ev) => (
-                    <TableRow key={ev.id}>
-                      <TableCell className="font-mono text-xs">
-                        {ev.gateway_tx ? (
-                          <CopyableCell
-                            value={ev.gateway_tx}
-                            label={shortenHash(ev.gateway_tx, 6)}
-                            href={
-                              ev.gateway_tx.startsWith("0x")
-                                ? `${EXPLORER_BASE}/tx/${ev.gateway_tx}`
-                                : undefined
-                            }
-                          />
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="font-mono text-xs">
-                        <CopyableCell
-                          value={ev.payer}
-                          label={shortenHash(ev.payer)}
-                          href={`${EXPLORER_BASE}/address/${ev.payer}`}
-                        />
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
-                          {ev.endpoint}
-                        </code>
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        ${ev.amount_usdc}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-xs">
-                        {formatDate(ev.created_at)}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="withdrawals">
-          <div className="rounded-lg border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Transaction</TableHead>
-                  <TableHead>Destination</TableHead>
-                  <TableHead>Chain</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">
-                    <button
-                      className="inline-flex items-center gap-1 hover:text-foreground transition-colors ml-auto"
-                      onClick={() => handleSort("amount")}
-                    >
-                      Amount (USDC)
-                      <SortIcon
-                        direction={sortField === "amount" ? sortDirection : "default"}
-                      />
-                    </button>
-                  </TableHead>
-                  <TableHead>
-                    <button
-                      className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
-                      onClick={() => handleSort("date")}
-                    >
-                      Date
-                      <SortIcon direction={sortField === "date" ? sortDirection : "default"} />
-                    </button>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loadingWithdrawals ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={6}
-                      className="h-24 text-center text-muted-foreground"
-                    >
-                      <Loader2 size={16} className="animate-spin inline mr-2" />
-                      Loading withdrawals...
-                    </TableCell>
-                  </TableRow>
-                ) : paginatedWithdrawals.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={6}
-                      className="h-24 text-center text-muted-foreground"
-                    >
-                      No withdrawals found.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  paginatedWithdrawals.map((w) => (
-                    <TableRow key={w.id}>
-                      <TableCell className="font-mono text-xs">
-                        {w.tx_hash ? (
-                          <CopyableCell
-                            value={w.tx_hash}
-                            label={shortenHash(w.tx_hash, 6)}
-                            href={
-                              w.tx_hash.startsWith("0x")
-                                ? `${EXPLORER_BASE}/tx/${w.tx_hash}`
-                                : undefined
-                            }
-                          />
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="font-mono text-xs">
-                        <CopyableCell
-                          value={w.destination_address}
-                          label={shortenHash(w.destination_address)}
-                          href={`${EXPLORER_BASE}/address/${w.destination_address}`}
-                        />
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
-                          {w.destination_chain}
-                        </code>
-                      </TableCell>
-                      <TableCell>
-                        <StatusBadge status={w.status} />
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        ${w.amount_usdc}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-xs">
-                        {formatDate(w.created_at)}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </TabsContent>
-      </Tabs>
-
-      {/* Shared pagination controls */}
-      {!loading && activeData.length > 0 && (
-        <div className="flex items-center justify-between border-x border-b rounded-b-lg px-4 py-3 text-sm">
-          <span className="text-muted-foreground">
-            {activeData.length} {activeTab === "payments" ? "transaction" : "withdrawal"}{activeData.length !== 1 ? "s" : ""} total
-          </span>
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground">
-              Page {clampedPage} of {totalPages}
-            </span>
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={clampedPage <= 1}
-              className="inline-flex items-center justify-center rounded-md border h-8 w-8 disabled:opacity-30 hover:bg-muted transition-colors"
+      {/* Transaction Table */}
+      <div>
+        <div className="flex items-center gap-3 mb-4">
+          <Input
+            placeholder={
+              activeTab === "payments"
+                ? "Filter by tx hash, payer, or endpoint..."
+                : "Filter by tx hash, address, chain, or status..."
+            }
+            className="max-w-xs"
+            value={filter}
+            onChange={(e) => { setFilter(e.target.value); setPage(1); }}
+          />
+          <div className="flex items-center gap-2 ml-auto">
+            <span className="text-sm text-muted-foreground whitespace-nowrap">Rows per page</span>
+            <Select
+              value={String(pageSize)}
+              onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}
             >
-              <ChevronLeft size={16} />
-            </button>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={clampedPage >= totalPages}
-              className="inline-flex items-center justify-center rounded-md border h-8 w-8 disabled:opacity-30 hover:bg-muted transition-colors"
-            >
-              <ChevronRight size={16} />
-            </button>
+              <SelectTrigger size="sm" className="w-[70px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PAGE_SIZE_OPTIONS.map((size) => (
+                  <SelectItem key={size} value={String(size)}>
+                    {size}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
-      )}
+
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => {
+            setActiveTab(v);
+            setFilter("");
+            setPage(1);
+            setSortField(null);
+            setSortDirection("default");
+          }}
+        >
+          <TabsList className="w-full">
+            <TabsTrigger value="payments">Payments ({events.length})</TabsTrigger>
+            <TabsTrigger value="withdrawals">Withdrawals</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="payments">
+            <div className="rounded-lg border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Transaction</TableHead>
+                    <TableHead>Payer</TableHead>
+                    <TableHead>Endpoint</TableHead>
+                    <TableHead className="text-right">
+                      <button
+                        className="inline-flex items-center gap-1 hover:text-foreground transition-colors ml-auto"
+                        onClick={() => handleSort("amount")}
+                      >
+                        Amount (USDC)
+                        <SortIcon direction={sortField === "amount" ? sortDirection : "default"} />
+                      </button>
+                    </TableHead>
+                    <TableHead>
+                      <button
+                        className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
+                        onClick={() => handleSort("date")}
+                      >
+                        Date
+                        <SortIcon direction={sortField === "date" ? sortDirection : "default"} />
+                      </button>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loadingPayments ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                        <Loader2 size={16} className="animate-spin inline mr-2" />
+                        Loading payments...
+                      </TableCell>
+                    </TableRow>
+                  ) : paginatedPayments.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                        No payments found.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    paginatedPayments.map((ev) => (
+                      <TableRow key={ev.id}>
+                        <TableCell className="font-mono text-xs">
+                          {ev.gateway_tx ? (
+                            <CopyableCell
+                              value={ev.gateway_tx}
+                              label={shortenHash(ev.gateway_tx, 6)}
+                              href={
+                                ev.gateway_tx.startsWith("0x")
+                                  ? `${EXPLORER_BASE}/tx/${ev.gateway_tx}`
+                                  : undefined
+                              }
+                            />
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">
+                          <CopyableCell
+                            value={ev.payer}
+                            label={shortenHash(ev.payer)}
+                            href={`${EXPLORER_BASE}/address/${ev.payer}`}
+                          />
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                            {ev.endpoint}
+                          </code>
+                        </TableCell>
+                        <TableCell className="text-right font-mono">
+                          ${ev.amount_usdc}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-xs">
+                          {formatDate(ev.created_at)}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="withdrawals">
+            <div className="rounded-lg border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Transaction</TableHead>
+                    <TableHead>Destination</TableHead>
+                    <TableHead>Chain</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">
+                      <button
+                        className="inline-flex items-center gap-1 hover:text-foreground transition-colors ml-auto"
+                        onClick={() => handleSort("amount")}
+                      >
+                        Amount (USDC)
+                        <SortIcon direction={sortField === "amount" ? sortDirection : "default"} />
+                      </button>
+                    </TableHead>
+                    <TableHead>
+                      <button
+                        className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
+                        onClick={() => handleSort("date")}
+                      >
+                        Date
+                        <SortIcon direction={sortField === "date" ? sortDirection : "default"} />
+                      </button>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loadingWithdrawals ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                        <Loader2 size={16} className="animate-spin inline mr-2" />
+                        Loading withdrawals...
+                      </TableCell>
+                    </TableRow>
+                  ) : paginatedWithdrawals.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                        No withdrawals found.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    paginatedWithdrawals.map((w) => (
+                      <TableRow key={w.id}>
+                        <TableCell className="font-mono text-xs">
+                          {w.tx_hash ? (
+                            <CopyableCell
+                              value={w.tx_hash}
+                              label={shortenHash(w.tx_hash, 6)}
+                              href={
+                                w.tx_hash.startsWith("0x")
+                                  ? `${EXPLORER_BASE}/tx/${w.tx_hash}`
+                                  : undefined
+                              }
+                            />
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">
+                          <CopyableCell
+                            value={w.destination_address}
+                            label={shortenHash(w.destination_address)}
+                            href={`${EXPLORER_BASE}/address/${w.destination_address}`}
+                          />
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                            {w.destination_chain}
+                          </code>
+                        </TableCell>
+                        <TableCell>
+                          <StatusBadge status={w.status} />
+                        </TableCell>
+                        <TableCell className="text-right font-mono">
+                          ${w.amount_usdc}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-xs">
+                          {formatDate(w.created_at)}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        {!loading && activeData.length > 0 && (
+          <div className="flex items-center justify-between border-x border-b rounded-b-lg px-4 py-3 text-sm">
+            <span className="text-muted-foreground">
+              {activeData.length} {activeTab === "payments" ? "transaction" : "withdrawal"}{activeData.length !== 1 ? "s" : ""} total
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">
+                Page {clampedPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={clampedPage <= 1}
+                className="inline-flex items-center justify-center rounded-md border h-8 w-8 disabled:opacity-30 hover:bg-muted transition-colors"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={clampedPage >= totalPages}
+                className="inline-flex items-center justify-center rounded-md border h-8 w-8 disabled:opacity-30 hover:bg-muted transition-colors"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
