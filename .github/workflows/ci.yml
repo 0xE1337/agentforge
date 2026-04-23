@@ -1,0 +1,68 @@
+name: ci
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+# Cancel prior runs for the same branch/PR when new commits land.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  next:
+    name: Next.js build + lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+        env:
+          # Prevent Next from hard-failing on missing runtime secrets during a build-only CI pass.
+          NEXT_TELEMETRY_DISABLED: '1'
+          SKIP_ENV_VALIDATION: '1'
+
+  contracts:
+    name: Foundry build + test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: contracts
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - name: Show forge version
+        run: forge --version
+
+      - name: Build contracts
+        run: forge build --sizes
+
+      - name: Run contract tests
+        run: forge test -vv

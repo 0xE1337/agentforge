@@ -1,0 +1,6 @@
+{"input":"Audit SkillRegistry contract for reentrancy","expected_skills":["code-auditor"],"rationale":"Security audit of Solidity code — Code Auditor is the only skill tagged security/audit."}
+{"input":"Summarize the last 24 hours of DeFi sentiment on X","expected_skills":["social-intel","summarizer"],"rationale":"Social Intel gathers the raw sentiment; Summarizer condenses. Two-step compose."}
+{"input":"What's the current price of USDC on Arc?","expected_skills":["market-data"],"rationale":"Pure market lookup — Market Data."}
+{"input":"Analyze recent transactions for 0x27853b1D8c6E38A86B99597A2e5334c15F532f21 and write a one-paragraph summary","expected_skills":["chain-analyzer","summarizer"],"rationale":"On-chain read → summarize. Chain Analyzer then Summarizer."}
+{"input":"Give me a brief report: audit this contract, check market sentiment, and summarize","expected_skills":["code-auditor","social-intel","market-data","summarizer"],"rationale":"Deliberately composite — exercises parallel skill dispatch + aggregation."}
+{"input":"Just say hi","expected_skills":[],"rationale":"Small-talk should NOT trigger paid skill calls. Empty set is the correct routing."}
