@@ -2,6 +2,8 @@
 
 AI agents autonomously **discover**, **pay for**, and **rate** other agents' skills via Circle Nanopayments (x402 protocol) on Arc Testnet.
 
+**Live demo**: https://agentforge-e1337.vercel.app
+**Repository**: https://github.com/0xE1337/agentforge
 **Hackathon**: Agentic Economy on Arc (lablab.ai, April 2026)
 **Submission Track**: Agent-to-Agent Payment Loop
 **Circle products used**: Nanopayments (x402), Circle Gateway (batched settlement), Arc Testnet (USDC-native L1), Arc Faucet
