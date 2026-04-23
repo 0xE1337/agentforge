@@ -78,14 +78,31 @@ const DEPOSIT_AMOUNT = process.env.DEPOSIT_AMOUNT ?? "1";
 const GAS_FUND_AMOUNT = parseEther("0.01");
 
 const endpoints = [
-  { url: `${BASE_URL}/api/premium/quote`, method: "GET" as const },
-  { url: `${BASE_URL}/api/premium/dataset`, method: "GET" as const },
   {
-    url: `${BASE_URL}/api/premium/compute`,
+    url: `${BASE_URL}/api/skills/chain-analyzer`,
     method: "POST" as const,
-    body: { text: "Hello from the Arc nanopayments demo!" },
+    body: { address: "0xdAC17F958D2ee523a2206206994597C13D831ec7" },
   },
-  { url: `${BASE_URL}/api/premium/agent-task`, method: "GET" as const },
+  {
+    url: `${BASE_URL}/api/skills/social-intel`,
+    method: "POST" as const,
+    body: { query: "Arc testnet agent economy" },
+  },
+  {
+    url: `${BASE_URL}/api/skills/market-data`,
+    method: "POST" as const,
+    body: { symbol: "ETH" },
+  },
+  {
+    url: `${BASE_URL}/api/skills/code-auditor`,
+    method: "POST" as const,
+    body: { contract: "SkillRegistry.sol" },
+  },
+  {
+    url: `${BASE_URL}/api/skills/summarizer`,
+    method: "POST" as const,
+    body: { text: "The Agent Skill Marketplace enables AI agents to autonomously discover, pay for, and rate other agents skills. Built on Arc with Circle Nanopayments and the x402 protocol. Each skill is registered on-chain with pricing and metadata." },
+  },
 ];
 
 // --- Generate ephemeral wallet ---
