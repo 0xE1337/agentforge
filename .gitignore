@@ -53,3 +53,4 @@ next-env.d.ts
 # Internal planning docs (not for public repo)
 /CONTEXT.md
 /GUIDE.md
+/SCRIPT.md
