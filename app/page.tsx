@@ -94,8 +94,8 @@ export default function LandingPage() {
               <div className="text-[10px] text-muted-foreground mt-1">SkillRegistry + PaymentGuard + MarketplaceFee</div>
             </div>
             <div>
-              <div className="font-mono font-bold text-amber-400">DeepSeek LLM</div>
-              <div className="text-[10px] text-muted-foreground mt-1">Task decomposition + aggregation</div>
+              <div className="font-mono font-bold text-amber-400">OpenAI / DeepSeek</div>
+              <div className="text-[10px] text-muted-foreground mt-1">Task decomposition + aggregation, with provider failover</div>
             </div>
           </div>
         </div>

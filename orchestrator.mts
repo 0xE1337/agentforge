@@ -30,9 +30,8 @@ if (!funderKey) {
   process.exit(1);
 }
 
-const deepseekKey = process.env.DEEPSEEK_API_KEY;
-if (!deepseekKey) {
-  console.error("Missing DEEPSEEK_API_KEY in .env.local");
+if (!process.env.OPENAI_API_KEY && !process.env.DEEPSEEK_API_KEY) {
+  console.error("Missing OPENAI_API_KEY or DEEPSEEK_API_KEY in .env.local");
   process.exit(1);
 }
 
@@ -134,8 +133,10 @@ async function main() {
   const balances = await gateway.getBalances();
   console.log(`[wallet] Gateway balance: ${balances.gateway.formattedAvailable}\n`);
 
-  // Run the full orchestration pipeline (discover → decompose → guard → execute → aggregate → rate)
-  const llm = createLLMClient({ apiKey: deepseekKey });
+  // Run the full orchestration pipeline (discover → decompose → guard → execute → aggregate → rate).
+  // LLM client picks OpenAI primary → DeepSeek fallback from env, with 15s
+  // per-provider timeout so a hanging upstream auto-fails over.
+  const llm = createLLMClient();
 
   const outcome = await orchestrate({
     task,

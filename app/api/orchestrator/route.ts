@@ -31,9 +31,15 @@ export async function POST(req: NextRequest) {
   }
 
   const funderKey = process.env.BUYER_PRIVATE_KEY as `0x${string}` | undefined;
-  const deepseekKey = process.env.DEEPSEEK_API_KEY;
-  if (!funderKey || !deepseekKey) {
-    return new Response(JSON.stringify({ error: "Missing server keys" }), { status: 500 });
+  const hasLLMKey = process.env.OPENAI_API_KEY || process.env.DEEPSEEK_API_KEY;
+  if (!funderKey || !hasLLMKey) {
+    return new Response(
+      JSON.stringify({
+        error:
+          "Missing server keys: BUYER_PRIVATE_KEY and (OPENAI_API_KEY or DEEPSEEK_API_KEY) are required.",
+      }),
+      { status: 500 },
+    );
   }
 
   const encoder = new TextEncoder();
@@ -78,8 +84,10 @@ export async function POST(req: NextRequest) {
         await gateway.deposit("1");
         send("step", { step: "setup", detail: "Wallet funded, Gateway deposited. Starting orchestration..." });
 
-        // Run orchestration with step streaming
-        const llm = createLLMClient({ apiKey: deepseekKey });
+        // Run orchestration with step streaming.
+        // LLM client picks OpenAI primary → DeepSeek fallback from env, with
+        // 15s per-provider timeout so a hanging upstream auto-fails over.
+        const llm = createLLMClient();
         const result = await orchestrate({
           task,
           gateway,

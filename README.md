@@ -25,7 +25,7 @@ An on-chain **SkillRegistry** contract stores AI skills with pricing, metadata, 
                         └────────┬─────────┘
                                  │ read on-chain
                         ┌────────┴─────────┐
-                        │   Orchestrator   │  (LLM: DeepSeek)
+                        │   Orchestrator   │  (LLM: OpenAI / DeepSeek)
                         │  task decompose  │
                         └───┬───┬───┬──────┘
                    x402 pay │   │   │ x402 pay
@@ -47,7 +47,7 @@ An on-chain **SkillRegistry** contract stores AI skills with pricing, metadata, 
 | 4 | Code Auditor | $0.008 | security, audit | `/api/skills/code-auditor` |
 | 5 | Summarizer | $0.001 | text, summary | `/api/skills/summarizer` |
 
-Social Intel and Summarizer use real LLM calls (DeepSeek); others return structured mock data.
+Social Intel and Summarizer use real LLM calls (OpenAI primary, DeepSeek fallback); others return structured mock data.
 
 ## Quick Start
 
@@ -137,7 +137,7 @@ x402 + Gateway + Arc is the first stack we have used where building an autonomou
 - **Contract**: Solidity 0.8.26, Foundry
 - **Frontend**: Next.js 16, React 19, shadcn/ui, Tailwind CSS
 - **Backend**: Supabase (realtime payment events)
-- **AI**: DeepSeek (task decomposition, summarization, sentiment analysis)
+- **AI**: OpenAI `gpt-4o-mini` primary, DeepSeek fallback (task decomposition, summarization, sentiment analysis); 15s per-provider timeout with auto-failover
 - **Agent**: Custom orchestrator with on-chain skill discovery
 
 ## License

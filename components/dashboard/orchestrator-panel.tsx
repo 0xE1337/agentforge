@@ -116,7 +116,7 @@ export function OrchestratorPanel() {
       <CardHeader className="pb-3">
         <CardTitle className="text-sm">Live Orchestrator</CardTitle>
         <p className="text-xs text-muted-foreground">
-          Type a task — watch 6-step autonomous loop in real-time
+          Type a task — watch 7-step autonomous loop in real-time
         </p>
       </CardHeader>
       <CardContent className="space-y-3">

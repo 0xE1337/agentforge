@@ -104,28 +104,111 @@ interface LLMClient {
   chat(messages: Array<{ role: string; content: string }>): Promise<string>;
 }
 
-/** Create an OpenAI-compatible LLM client (works with DeepSeek) */
-export function createLLMClient(opts: {
-  apiKey: string;
+interface LLMProvider {
+  name: string;
+  baseURL: string;
+  apiKey: string | undefined;
+  model: string;
+}
+
+const LLM_TIMEOUT_MS = 15_000;
+
+function envProviders(): LLMProvider[] {
+  return [
+    {
+      name: "openai",
+      baseURL: "https://api.openai.com/v1/chat/completions",
+      apiKey: process.env.OPENAI_API_KEY,
+      model: process.env.OPENAI_MODEL ?? "gpt-4o-mini",
+    },
+    {
+      name: "deepseek",
+      baseURL: "https://api.deepseek.com/v1/chat/completions",
+      apiKey: process.env.DEEPSEEK_API_KEY,
+      model: process.env.DEEPSEEK_MODEL ?? "deepseek-chat",
+    },
+  ];
+}
+
+async function chatOnProvider(
+  provider: LLMProvider,
+  messages: Array<{ role: string; content: string }>,
+): Promise<string> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), LLM_TIMEOUT_MS);
+  try {
+    const res = await fetch(provider.baseURL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${provider.apiKey}`,
+      },
+      body: JSON.stringify({
+        model: provider.model,
+        messages,
+        temperature: 0.3,
+      }),
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      throw new Error(`${provider.name} ${res.status} ${await res.text()}`);
+    }
+    const data = (await res.json()) as {
+      choices: Array<{ message: { content: string } }>;
+    };
+    return data.choices[0].message.content;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * Create an OpenAI-compatible LLM client.
+ *
+ * Zero-arg form (recommended): reads OPENAI_API_KEY → DEEPSEEK_API_KEY from
+ * env, tries them in order with a 15s per-provider timeout. Slow or failing
+ * providers transparently fall back to the next.
+ *
+ * Single-key form (legacy): pin one provider explicitly. Useful for tests.
+ */
+export function createLLMClient(opts?: {
+  apiKey?: string;
   baseURL?: string;
   model?: string;
 }): LLMClient {
-  const model = opts.model ?? "deepseek-chat";
-  const baseURL = opts.baseURL ?? "https://api.deepseek.com";
+  const explicit = opts?.apiKey
+    ? [
+        {
+          name: "explicit",
+          baseURL: opts.baseURL?.endsWith("/chat/completions")
+            ? opts.baseURL
+            : `${(opts.baseURL ?? "https://api.openai.com/v1").replace(/\/$/, "")}/chat/completions`,
+          apiKey: opts.apiKey,
+          model: opts.model ?? "gpt-4o-mini",
+        },
+      ]
+    : envProviders().filter((p) => p.apiKey);
+
+  if (explicit.length === 0) {
+    throw new Error(
+      "No LLM provider configured. Set OPENAI_API_KEY or DEEPSEEK_API_KEY.",
+    );
+  }
 
   return {
     async chat(messages) {
-      const res = await fetch(`${baseURL}/v1/chat/completions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${opts.apiKey}`,
-        },
-        body: JSON.stringify({ model, messages, temperature: 0.3 }),
-      });
-      if (!res.ok) throw new Error(`LLM API error: ${res.status} ${await res.text()}`);
-      const data = (await res.json()) as { choices: Array<{ message: { content: string } }> };
-      return data.choices[0].message.content;
+      const errors: string[] = [];
+      for (const provider of explicit) {
+        try {
+          return await chatOnProvider(provider, messages);
+        } catch (error) {
+          const message =
+            error instanceof Error ? error.message : String(error);
+          console.warn(`[llm] ${provider.name} failed: ${message}`);
+          errors.push(`${provider.name}: ${message}`);
+        }
+      }
+      throw new Error(`All LLM providers failed → ${errors.join(" | ")}`);
     },
   };
 }
