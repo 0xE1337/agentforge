@@ -16,10 +16,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { logout } from "@/app/actions";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 import { TopBarGatewayControls } from "@/components/dashboard/top-bar-gateway-controls";
-import { LogOut } from "lucide-react";
 
 export default function DashboardLayout({
   children,
@@ -30,12 +29,15 @@ export default function DashboardLayout({
     <div className="min-h-screen flex flex-col">
       <header className="border-b">
         <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6">
+          <div className="flex items-center gap-3">
+            <Link href="/" className="text-sm font-semibold hover:underline">
+              AgentForge
+            </Link>
+            <Badge variant="secondary" className="text-[10px] uppercase tracking-wider">
+              Live Demo
+            </Badge>
+          </div>
           <TopBarGatewayControls />
-          <form action={logout}>
-            <Button variant="ghost" size="icon" type="submit">
-              <LogOut size={16} className="text-muted-foreground" />
-            </Button>
-          </form>
         </div>
       </header>
       <main className="flex-1 p-6">{children}</main>

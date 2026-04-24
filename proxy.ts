@@ -18,23 +18,12 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 
-export function proxy(request: NextRequest) {
-  const session = request.cookies.get("session")?.value;
-  const { pathname } = request.nextUrl;
-
-  // Logged-in user trying to access sign-in page -> redirect to dashboard
-  if (pathname === "/" && session === "authenticated") {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
-  }
-
-  // Logged-out user trying to access protected routes -> redirect to sign-in
-  if (pathname.startsWith("/dashboard") && session !== "authenticated") {
-    return NextResponse.redirect(new URL("/", request.url));
-  }
-
+// Public demo: dashboard is read-only and accessible without authentication so
+// hackathon evaluators can see live on-chain payment activity directly.
+export function proxy(_request: NextRequest) {
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/", "/dashboard/:path*"],
+  matcher: [],
 };
